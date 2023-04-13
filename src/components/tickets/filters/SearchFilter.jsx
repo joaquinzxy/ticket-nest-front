@@ -1,8 +1,12 @@
 import { Button, Dropdown, Grid, Input } from '@nextui-org/react';
-import React from 'react';
+import React, { useState } from 'react';
 import { SearchIcon } from '../../../assets/searchIcon';
 
-export const SearchFilter = () => {
+export const SearchFilter = ({ paramText, setParamText }) => {
+  const handleInput = (event) => {
+    setParamText(event.target.value);
+  };
+
   return (
     <>
       <Grid.Container>
@@ -23,16 +27,9 @@ export const SearchFilter = () => {
             }}
             placeholder="Search..."
             aria-labelledby="Search ticket"
+            value={paramText}
+            onChange={handleInput}
           />
-        </Grid>
-        <Grid>
-          {' '}
-          <Button auto color={'secondary'} flat css={{ marginLeft: '8px' }}>
-            <SearchIcon
-              fill={'var(--nextui-colors-secondaryLightContrast)'}
-              size={14}
-            />
-          </Button>
         </Grid>
       </Grid.Container>
     </>

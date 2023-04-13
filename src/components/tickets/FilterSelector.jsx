@@ -1,4 +1,4 @@
-import { Container, Dropdown, Grid } from '@nextui-org/react';
+import { Button, Container, Dropdown, Grid } from '@nextui-org/react';
 import React from 'react';
 import { CategoryFilter } from './filters/CategoryFilter';
 import { PaginationFilter } from './filters/PaginationFilter';
@@ -12,11 +12,14 @@ export const FilterSelector = ({
   setCategory,
   statusSelected,
   setStatus,
+  paramText,
+  setParamText,
+  handleApply,
 }) => {
   return (
     <Grid.Container justify="center" css={{ padding: '1rem' }} gap={2}>
       <Grid>
-        <SearchFilter />
+        <SearchFilter paramText={paramText} setParamText={setParamText} />
       </Grid>
       <Grid>
         <StatusFilter selected={statusSelected} setSelected={setStatus} />
@@ -26,6 +29,11 @@ export const FilterSelector = ({
       </Grid>
       <Grid>
         <PaginationFilter selected={limitSelected} setSelected={setLimit} />
+      </Grid>
+      <Grid>
+        <Button auto onPress={handleApply}>
+          Apply filters
+        </Button>
       </Grid>
     </Grid.Container>
   );

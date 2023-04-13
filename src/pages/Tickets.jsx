@@ -3,18 +3,11 @@ import { Header } from '../components/common/Header';
 import { getJWT } from '../helpers/checkLocalStorage';
 import { Navigate } from 'react-router-dom';
 import { TicketGrid } from '../components/tickets/TicketGrid';
-import { useFetchTickets } from '../hooks/useFetchTickets';
-import {
-  Container,
-  Dropdown,
-  Grid,
-  Loading,
-  Pagination,
-  Spacer,
-} from '@nextui-org/react';
+import { Grid, Loading, Pagination, Spacer, Text } from '@nextui-org/react';
 import { FilterSelector } from '../components/tickets/FilterSelector';
 import { fetchData } from '../helpers/fetchData';
 import { endpoints } from '../helpers/endpoints';
+import { getTickets } from '../hooks/getTickets';
 
 export const Tickets = () => {
   if (!getJWT()) {
@@ -22,7 +15,8 @@ export const Tickets = () => {
   }
 
   const [filterData, setFilterData] = useState({
-    status: 'All',
+    textParam: '',
+    isClosed: 'All',
     category: 'All',
     limit: 10,
     page: 1,
@@ -44,31 +38,50 @@ export const Tickets = () => {
     });
   };
 
-  const handleStatus = (status) => {
-    setFilterData({ ...filterData, status: Array.from(status)[0], page: 1 });
+  const handleStatus = (isClosed) => {
+    setFilterData({
+      ...filterData,
+      isClosed: Array.from(isClosed)[0],
+      page: 1,
+    });
+  };
+
+  const handleSearchInput = (textParam) => {
+    setFilterData({ ...filterData, textParam, page: 1 });
   };
 
   const [isLoading, setIsLoading] = useState(true);
   const [tickets, setTickets] = useState([]);
+  const [totalTickets, setTotalTickets] = useState(0);
 
-  useEffect(() => {
+  const applyFilters = () => {
     setIsLoading(true);
-    const getTickets = async (page, limit) => {
-      const tickets = await fetchData(
-        `${endpoints.getTickets}?page=${page}&limit=${limit}`
-      );
-      return tickets;
-    };
-    const { page, limit } = filterData;
-    getTickets(page, limit).then((tickets) => {
+
+    getTickets(filterData).then(({ tickets, total }) => {
       setIsLoading(false);
       setTickets(tickets);
+      setTotalTickets(total);
     });
-  }, [filterData]);
+  };
+
+  useEffect(() => {
+    applyFilters();
+  }, []);
 
   return (
     <>
       <Header activePage={'Tickets'} />
+      <FilterSelector
+        limitSelected={new Set([filterData.limit])}
+        setLimit={handleLimit}
+        categorySelected={new Set([filterData.category])}
+        setCategory={handleCategory}
+        statusSelected={new Set([filterData.isClosed])}
+        setStatus={handleStatus}
+        paramText={filterData.textParam}
+        setParamText={handleSearchInput}
+        handleApply={applyFilters}
+      />
       {isLoading ? (
         <Grid.Container justify="center" alignContent="center">
           <Grid css={{ marginTop: '40vh' }}>
@@ -77,24 +90,26 @@ export const Tickets = () => {
         </Grid.Container>
       ) : (
         <>
-          <FilterSelector
-            limitSelected={new Set([filterData.limit])}
-            setLimit={handleLimit}
-            categorySelected={new Set([filterData.category])}
-            setCategory={handleCategory}
-            statusSelected={new Set([filterData.status])}
-            setStatus={handleStatus}
-          />
-          <TicketGrid tickets={tickets} />
-          <Grid.Container justify="center" css={{ padding: '4rem' }}>
-            <Grid>
-              <Pagination
-                total={3}
-                initialPage={filterData.page}
-                onChange={handlePagination}
-              />
-            </Grid>
-          </Grid.Container>
+          {tickets.length != 0 ? (
+            <>
+              <TicketGrid tickets={tickets} />
+              <Grid.Container justify="center" css={{ padding: '4rem' }}>
+                <Grid>
+                  <Pagination
+                    total={Math.ceil(totalTickets / filterData.limit)}
+                    initialPage={filterData.page}
+                    onChange={handlePagination}
+                  />
+                </Grid>
+              </Grid.Container>
+            </>
+          ) : (
+            <Grid.Container justify="center" css={{ padding: '4rem' }}>
+              <Grid>
+                <Text h3>We couldn't find anything 😩</Text>
+              </Grid>
+            </Grid.Container>
+          )}
         </>
       )}
     </>
